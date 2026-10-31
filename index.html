@@ -94,6 +94,13 @@ select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8
 .btn.primary{background:var(--main);color:#fff;padding:12px 26px;font-size:15px}
 .btn.primary:disabled{opacity:.6;cursor:wait}
 
+.floatsub{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:14px;align-items:center;justify-content:center;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid var(--line);
+  box-shadow:0 -4px 16px rgba(0,0,0,.08);font-size:14px}
+.floatsub span{color:var(--sub)}
+.floatsub span.ok{color:var(--main);font-weight:600}
+.floatsub span.err{color:var(--warn);font-weight:600}
+
 .two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .two .card{margin:0}
 .two label.l{display:block;margin:10px 0 4px;font-size:14px;color:var(--sub)}
@@ -104,7 +111,7 @@ footer .wrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;
 footer .btn{background:transparent;color:#dfe8e2;border:1px solid rgba(255,255,255,.4)}
 
 @media print{
-  nav,.hero .actions,.done,footer .btn,.btn{display:none!important}
+  nav,.hero .actions,.done,footer .btn,.btn,.floatsub{display:none!important}
   .hero{background:none;color:#000;padding:10px 0}
   .overview{margin-top:0}
   section{padding-top:24px}
@@ -337,6 +344,11 @@ footer .btn{background:transparent;color:#dfe8e2;border:1px solid rgba(255,255,2
 
 </main>
 
+<div class="floatsub" id="floatsub" hidden>
+  <span id="floatmsg">수련회 평가를 다 적으셨나요?</span>
+  <button class="btn primary" type="button" id="submit2">제출하기</button>
+</div>
+
 <footer>
   <div class="wrap">
     <span>온교회 리더회의 · 입력한 내용은 이 기기의 브라우저에 자동 저장됩니다.</span>
@@ -384,7 +396,19 @@ footer .btn{background:transparent;color:#dfe8e2;border:1px solid rgba(255,255,2
   var subBtn = document.getElementById("submit"),
       clrBtn = document.getElementById("clearform"),
       msg = document.getElementById("submsg");
-  function say(t, cls){ msg.textContent = t; msg.className = "sub" + (cls ? " "+cls : ""); }
+  var fmsg = document.getElementById("floatmsg"), fbar = document.getElementById("floatsub"),
+      fbtn = document.getElementById("submit2");
+  var DEFAULT_MSG = "수련회 평가를 다 적으셨나요?";
+  function say(t, cls){
+    msg.textContent = t; msg.className = "sub" + (cls ? " "+cls : "");
+    fmsg.textContent = cls ? t : DEFAULT_MSG; fmsg.className = cls || "";
+  }
+  fbtn.addEventListener("click", function(){ subBtn.click(); });
+  if("IntersectionObserver" in window){
+    new IntersectionObserver(function(es){
+      fbar.hidden = !es[0].isIntersecting || es[0].intersectionRatio < 0.05;
+    }, {threshold:[0,0.05,0.2]}).observe(document.getElementById("s1"));
+  }else{ fbar.hidden = false; }
   function hasAnswer(){
     return Object.keys(ENTRY).some(function(k){
       if(k === "name") return false;
